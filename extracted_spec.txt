@@ -1,0 +1,222 @@
+﻿Practical Exam
+Subject: SDN302  |  Semester: FALL 2026 |Internet Access: Yes
+1. Overview
+You will build ReadLog, a small web app where each person tracks their own reading sessions: which book, how many minutes, what genre, and when — with a few sessions marked as favorites, and a live summary of minutes read by genre. The project will be built with: a Next.js project (App Router) that exposes its own REST API (Route Handlers), Prisma as the ORM, PostgreSQL hosted on Supabase as the database, your own email/password authentication, and a deployment on Vercel.
+This exam describes what the app and its API must do, not how to code them. How you structure the code is up to you, as long as the routes, the visible texts, the data-testid names, and the API request/response shapes in this document are exactly as written — the API is graded by calling it directly, and the web pages are graded with an automated browser, so both must match this spec precisely.
+2. The application
+2.1 Setup
+A Next.js project (App Router, TypeScript) with Tailwind CSS and ShadCN UI (components.json in the project root, at least two ShadCN components actually used).
+It must build with npm install followed by npm run build using only three environment variables: DATABASE_URL, DIRECT_URL and AUTH_SECRET. No connection string or secret may be written directly in the code.
+Your package.json build script must run Prisma's client generation before building, e.g. "build": "prisma generate && next build", so a fresh checkout builds without extra manual steps.
+In your Supabase project: use its PostgreSQL database only (via Prisma). Create one test account for the grader by registering it through your own app's Register page or API before you submit — do not create it directly in Supabase's dashboard, since the grader logs in through your app, not through Supabase.
+Run your migrations against that Supabase database before you submit (e.g. npx prisma migrate dev, or migrate deploy) and commit the prisma/migrations folder, so the live database already has the right tables when the grader tests your deployed app.
+2.2 Data (Prisma + Supabase Postgres)
+Design your own Prisma schema in prisma/schema.prisma. Create at least two models, User and ReadingLog, that store everything the app saves. It must have at least the fields below. The field names must be exactly as written (camelCase), because the grader reads and writes them through your API's JSON; you choose the Prisma types, defaults and indexes.
+Model
+Field
+What it holds
+User
+id
+a unique id for each user
+User
+email
+the user's e-mail, unique
+User
+passwordHash
+a bcrypt hash of the password — never the plain password
+User
+createdAt
+when the account was created
+ReadingLog
+id
+a unique id for each reading session
+ReadingLog
+userId
+the user the reading session belongs to
+ReadingLog
+bookTitle
+the title of the book being read
+ReadingLog
+minutesRead
+how long was spent reading (a positive whole number of minutes)
+ReadingLog
+genre
+one of Fiction, Non-Fiction, Sci-Fi, Biography, Other
+ReadingLog
+note
+an optional note, empty by default
+ReadingLog
+favorite
+true or false, false by default
+ReadingLog
+readOn
+the date the session happened
+ReadingLog
+createdAt
+when the row was added
+Security rules (enforced in your API code, not only in the UI):
+Every /api/reading-logs* route requires a valid, logged-in session. With no session, or an invalid/expired one, it returns 401 and touches no data.
+A user may only read, add, change, or delete their own reading sessions. The server must derive the owner from the logged-in session — never from a userId or ownerId sent in the request body or query string. A request that sends someone else's id in the body must be ignored, not honored.
+Build every Prisma query through its query builder (where, data, etc.) — never by concatenating raw SQL strings with user input.
+Never commit a real DATABASE_URL, DIRECT_URL, or AUTH_SECRET value to the repository, and never log passwords or password hashes.
+2.3 Authentication
+Implement your own email/password authentication (no NextAuth.js or Supabase Auth required for this exam — a custom API is enough, implementing JWT with your own API). On successful login, your API must set a session as an HttpOnly cookie named session_token so the grader's automated tests can log in once and reuse the same session for every later request, exactly like a browser would.
+Required auth endpoints:
+POST /api/auth/register — body { email, password, confirmPassword }. Creates a new User (password stored only as a bcrypt hash) and returns 201 with { id, email }. Does not log the user in.
+POST /api/auth/login — body { email, password }. On success, sets the session_token cookie (HttpOnly) and returns 200 with { id, email }. On a wrong password or unknown email, returns 401 with { error: "Invalid email or password" } and no cookie is set.
+POST /api/auth/logout — clears the session_token cookie and returns 200. A later call to GET /api/auth/me must then return 401.
+GET /api/auth/me — returns 200 with { id, email } for the logged-in user, or 401 with { error: "Unauthorized" } if there is no valid session.
+2.4 Reading Log API
+Required reading-log endpoints, all requiring a valid session (see Security rules above):
+Every endpoint below returns one reading session — or a list of them — shaped exactly like this (field names and types fixed; your own id format is fine):
+{
+  "id": "cls9f2q1e0000...",
+  "bookTitle": "Atomic Habits",
+  "minutesRead": 40,
+  "genre": "Non-Fiction",
+  "note": "Chapter 3",
+  "favorite": false,
+  "readOn": "2026-10-20",
+  "createdAt": "2026-10-20T08:15:00.000Z"
+}
+All error responses, from any endpoint in this document, are shaped the same way:
+{ "error": "<exact message>" }
+GET /api/reading-logs — returns only the current user's reading sessions as a JSON array of the shape above, ordered by readOn descending (most recent first); ties broken by bookTitle, alphabetically, case-insensitive. Accepts optional query parameters that filter the result: ?genre= (one of the five genres), ?favorite=true, and ?q= (matches bookTitle OR note, case-insensitive, surrounding spaces ignored). The parameters combine — every one that is given must match.
+GET /api/reading-logs/summary — accepts the same optional genre/favorite/q query parameters as the list, and returns a summary computed only over the sessions that match them, shaped like this:
+{
+  "count": 5,
+  "favoriteCount": 2,
+  "totalMinutes": 180,
+  "breakdown": [
+    { "genre": "Fiction",     "count": 3, "total": 120 },
+    { "genre": "Non-Fiction", "count": 2, "total": 60 }
+  ]
+}
+breakdown has one entry per genre present in the matching set, ordered by total minutes descending; equal totals are ordered Fiction, then Non-Fiction, then Sci-Fi, then Biography, then Other. With nothing matching, count/favoriteCount/totalMinutes are 0 and breakdown is an empty array.
+POST /api/reading-logs — body { bookTitle, minutesRead, genre, note?, readOn }. On success returns 201 with the created reading session (the shape above, including its id). Validation errors return 400 with the error shape above, using the exact messages from the table in section 2.5. A duplicate (same bookTitle, minutesRead and readOn already saved by this user) returns 409 with { "error": "Duplicate reading session: a reading session with the same book title, minutes and date already exists" }.
+PATCH /api/reading-logs/:id — body is any subset of { bookTitle, minutesRead, genre, note, readOn, favorite }; used both for editing a field and for toggling the favorite. Returns 200 with the updated reading session (the shape above). The same validation and duplicate rules as POST apply to any field being changed. An id that does not exist, or belongs to another user, returns 404 with { "error": "Reading log not found" } — a user must never be able to tell, from the response, whether a given id exists for someone else.
+DELETE /api/reading-logs/:id — deletes the reading session if it belongs to the current user and returns 200 with { "success": true }. An id that does not exist, or belongs to another user, returns 404 with { "error": "Reading log not found" }.
+2.5 Pages and what they do
+Home — / (public)
+A header with the app name and, when logged out, a Login button and a Register button. Below it a title (home-title, text ReadLog) and a short description of the app, with at least three feature cards (for example "Log every session", "Sort by genre", "See minutes read").
+When logged in the header instead shows the user's email, a link to the reading log page and a Logout button. After Logout the header is back to the logged-out version, and a later GET /api/auth/me returns 401.
+Register — /register  and  Login — /login
+Forms with your own messages, not the browser's (add noValidate); nothing is shown before the first submit; an error disappears when its field becomes valid. Register has email, password and confirm password; Login has email and password.
+With valid input, Register calls POST /api/auth/register and shows form-success (text Registration successful). Login calls POST /api/auth/login and, on success, goes to /reading-logs. If the API returns an error (duplicate account, wrong password), its message is shown in error-auth.
+Field
+When
+Exact error message
+Email (both forms)
+empty / not a valid e-mail
+Email is required
+Please enter a valid email address
+Password (both forms)
+empty / fewer than 6 characters (Register only)
+Password is required
+Password must be at least 6 characters
+Confirm password (Register)
+empty / different from password
+Confirm password is required
+Passwords do not match
+Reading Logs — /reading-logs (protected)
+A visitor who is not logged in is sent to /login. While the app is still finding out whether someone is logged in, nothing from this page is shown (no flash of content, no wrong redirect). A logged-in person sees the page with reading-logs-page.
+A. Add a reading session.
+A form (reading-log-form, noValidate) with: book title, minutes read, genre (a list with an empty first choice "Choose genre", then Fiction, Non-Fiction, Sci-Fi, Biography, Other), an optional note, and a date. Validation runs on submit; nothing is shown on first load; each message disappears when its field is valid.
+Field
+Rule
+Exact error message
+Book title
+empty or spaces only / longer than 80 characters
+Book title is required
+Book title must be at most 80 characters
+Minutes read
+empty or not a number / not a positive number
+Minutes read is required
+Minutes read must be a positive number
+Genre
+nothing chosen / not one of the five genres
+Please choose a genre
+Invalid genre
+Date
+nothing chosen / a date after today
+Date is required
+Date cannot be in the future
+With valid input the reading session is saved through POST /api/reading-logs, appears in the list at once without reloading the page, the form is cleared, and reading-log-success shows the text Reading session added. If the API returns an error — for example a duplicate — show it in error-reading-log and do not add anything to the list.
+B. The list.
+All the user's reading sessions as returned by GET /api/reading-logs (most recent readOn first, ties by bookTitle). Each session (reading-log-item) shows its book title, minutes read, genre, date, a favorite/star toggle (a button that is "on" for favorited sessions) and a Delete button. Toggling the favorite and Delete call PATCH and DELETE and the item updates at once; after a page refresh the list is exactly the same. When there is nothing to show, display reading-logs-empty with the text No reading sessions found instead of the list.
+C. Filters, search and summary.
+A genre filter (All, or one of the five genres), a "favorites only" checkbox, and a search box that keeps only sessions whose book title or note contains the typed text (not case-sensitive, surrounding spaces ignored). They combine, and update the list immediately (no button to press) by calling GET /api/reading-logs and GET /api/reading-logs/summary again with the matching query parameters. A Clear button resets all three. When a session stops matching because of a change (for example it is un-favorited while "favorites only" is on) it disappears from the list at once.
+The summary always describes the sessions currently shown: reading-log-count (plain integer), favorite-count (plain integer), total-minutes (plain integer), and genre-breakdown with one breakdown-row per genre that appears — highest total first (ties: Fiction, then Non-Fiction, then Sci-Fi, then Biography, then Other) — each row showing breakdown-name, breakdown-count and breakdown-total.
+2.6 Shared state
+The reading sessions are loaded once after login and kept in React Context, so the form, the list, the filters and the summary all use the same data without passing it down as props. After logout (and when another person logs in) the previous person's sessions must disappear from memory and from the screen.
+2.7 Look and feel
+At a phone width of 375 px there is no horizontal scrolling and the form and list are readable; at 1280 px the form and the summary can sit next to the list. Use Tailwind CSS and ShadCN UI (Button, Card, Input, Label … at least two used).
+3. Required test hooks (fixed names)
+The exam is graded with an automated browser test for the pages, and a direct HTTP test against your deployed API for section 2.4. Add data-testid="..." with exactly these values and use exactly these routes. Put the attribute on the element that holds the text (messages) or on the input itself.
+Route
+Element
+data-testid
+/ and header
+Login / Register buttons (logged out)
+btn-login, btn-register
+header (logged in)
+User's e-mail, Logout button, link to /reading-logs
+user-email, btn-logout, link-reading-logs
+/
+Title
+home-title
+/login
+Form, inputs, submit
+login-form, login-email, login-password, login-submit
+/register
+Form, inputs, submit
+register-form, register-email, register-password, register-confirm-password, register-submit
+/login, /register
+Messages
+error-email, error-password, error-confirm-password (Register only), error-auth, form-success (Register only)
+/reading-logs
+Page container
+reading-logs-page
+/reading-logs form
+Form, inputs, submit
+reading-log-form, input-book-title, input-minutes, input-genre, input-note, input-date, btn-add-reading-log
+/reading-logs form
+Messages
+error-book-title, error-minutes, error-genre, error-date, error-reading-log, reading-log-success
+/reading-logs list
+Container, one row per session, empty state
+reading-log-list, reading-log-item, reading-logs-empty
+inside reading-log-item
+Parts of one session
+reading-log-title, reading-log-minutes, reading-log-genre, reading-log-date, btn-toggle-favorite (with aria-pressed="true" / "false"), btn-delete-reading-log
+/reading-logs filters
+Controls
+filter-genre (a select, empty value = All), filter-favorite (a checkbox), search-input (text), btn-clear-filters
+/reading-logs summary
+Counts, breakdown
+reading-log-count, favorite-count, total-minutes, genre-breakdown (container), breakdown-row (one per genre) containing breakdown-name, breakdown-count, breakdown-total
+Only render an error or success element when there is a message to show. Texts are compared exactly (case-sensitive). API JSON bodies are compared exactly for the "error" key; extra keys in a success response are ignored.
+4. Submission
+Put two files in the same folder and submit that folder (both named with your student code):
+QE123456.docx — one real Word file (.docx or .doc, not a PDF or a renamed file). Copy this template exactly and write each URL as plain visible text with https://:
+Student Code: QE123456
+Full Name: Nguyen Van A
+GitHub Repository URL: https://github.com/username/repo-name
+Vercel Production URL: https://your-project.vercel.app
+Test account email: grader.qe123456@example.com
+Test account password: Test1234!
+Because grading calls your own deployed API, not Supabase directly, do NOT put your DATABASE_URL, DIRECT_URL, AUTH_SECRET, or any Supabase password in the Word file — only set them in Vercel's Environment Variables.
+QE123456.zip — your source code: package.json at the top level of the zip (not inside an extra folder), your lock file, app/ (or src/), components/, public/, components.json, prisma/schema.prisma, prisma/migrations/, and a .env.example that lists the three variable names without values. Do not include node_modules, .next, .git, or any .env file with real values.
+The GitHub repository must be public and contain the same code as the zip (the zip is what is graded). The Vercel link is the production domain (https://<project>.vercel.app) with "Vercel Authentication" turned off — not a dashboard link, a share link or a per-deployment link.
+The test account must already exist (registered through your own app) and be able to log in. Log in with it once on your deployed site before you submit. The three environment variables must be set in Vercel and the latest code redeployed, with migrations already applied to the Supabase database it points to.
+5. Self-check before you submit
+Register with a new e-mail works at once; registering the same e-mail again shows the API's message in error-auth.
+Logged out, opening /reading-logs sends you to /login; after logging in you land on /reading-logs, and the header shows your e-mail and Logout.
+Submitting the empty reading-session form shows the book title, minutes, genre and date messages; they are not visible when the page loads. A negative minutes value shows the minutes message.
+Adding a reading session shows it at once in the list in the right position; refreshing keeps it; adding the same book title+minutes+date again shows error-reading-log and adds nothing.
+The favorite toggles aria-pressed and stays after a refresh; with "favorites only" on, un-favoriting a session removes it from the list.
+With five sessions in three genres: genre filter, favorites-only, search, count, favorite count, total minutes and breakdown change correctly; Clear resets all three.
+Deleting a session removes it, also after refreshing; logging in as a different account shows an empty list, not the first account's sessions.
+Calling your deployed /api/reading-logs with no cookie returns 401; calling it with the test account's session returns only that account's sessions.
+npm install && npm run build works in a fresh copy of the unzipped folder with only the three environment variables set.
+The zip has no node_modules, .next, .git or .env; the Word file follows the template; both files are named with your student code and are in the same folder.
