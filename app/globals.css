@@ -1,26 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbf9f4;
+  --foreground: #292524;
+  --card: #ffffff;
+  --card-foreground: #292524;
+  --border: #292524;
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-pixel: "Silkscreen", monospace;
+  --font-sans: "Plus Jakarta Sans", var(--font-geist-sans), sans-serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), monospace;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-image: radial-gradient(#e7e2d6 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Pixel / Retro Box Utility */
+.pixel-card {
+  background: #ffffff;
+  border: 2px solid #292524;
+  box-shadow: 4px 4px 0px #292524;
+  border-radius: 10px;
+}
+
+.pixel-card-sm {
+  background: #ffffff;
+  border: 2px solid #292524;
+  box-shadow: 2.5px 2.5px 0px #292524;
+  border-radius: 8px;
+}
+
+.pixel-btn-primary {
+  background-color: #ea580c;
+  color: #ffffff;
+  border: 2px solid #292524;
+  box-shadow: 3px 3px 0px #292524;
+  transition: all 0.1s ease;
+}
+
+.pixel-btn-primary:hover {
+  background-color: #f97316;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #292524;
+}
+
+.pixel-btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #292524;
+}
+
+.pixel-font {
+  font-family: "Silkscreen", monospace;
+  letter-spacing: -0.02em;
 }

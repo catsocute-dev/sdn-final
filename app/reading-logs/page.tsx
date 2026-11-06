@@ -8,9 +8,17 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Star, Trash2, Search, X, BookOpen, Clock, Tag } from "lucide-react";
+import { Star, Trash2, Search, X, BookOpen, Clock, Calendar, Sparkles, Library } from "lucide-react";
 
 const ALLOWED_GENRES = ["Fiction", "Non-Fiction", "Sci-Fi", "Biography", "Other"];
+
+const GENRE_BADGE_COLORS: Record<string, string> = {
+  Fiction: "bg-amber-100 text-amber-900 border-amber-900",
+  "Non-Fiction": "bg-emerald-100 text-emerald-900 border-emerald-900",
+  "Sci-Fi": "bg-sky-100 text-sky-900 border-sky-900",
+  Biography: "bg-purple-100 text-purple-900 border-purple-900",
+  Other: "bg-stone-100 text-stone-800 border-stone-800",
+};
 
 function isFutureDate(dateStr: string): boolean {
   if (!dateStr) return false;
@@ -179,29 +187,44 @@ export default function ReadingLogsPage() {
 
   return (
     <div data-testid="reading-logs-page" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Reading Log
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Track reading sessions, monitor your reading habit, and analyze progress.
-          </p>
+      {/* Page Title & Pixel Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b-2 border-stone-800 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-amber-400 border-2 border-stone-800 shadow-[3px_3px_0px_#292524] flex items-center justify-center text-stone-900 shrink-0">
+            <Library className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 pixel-font">
+              Reading Log
+            </h1>
+            <p className="text-xs sm:text-sm font-medium text-stone-600 mt-0.5">
+              Personal journal to track sessions, chapters, and mindful reading moments.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Main Grid: Responsive 375px mobile stacked, 1280px desktop two-column */}
+      {/* Responsive layout: 375px mobile stacked, 1280px desktop two-column */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Add Session Form & Summary */}
+        {/* Left Column: Add Session Form & Reading Summary */}
         <div className="lg:col-span-5 space-y-6">
           {/* Add Reading Session Form */}
-          <Card className="shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl">Add Reading Session</CardTitle>
-              <CardDescription>Log a new reading activity into your journal</CardDescription>
+          <Card className="shadow-[5px_5px_0px_#292524] border-3 border-stone-800 bg-[#fffdfa]">
+            <CardHeader className="pb-3 border-b-2 border-stone-200">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-black pixel-font flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-amber-600" />
+                  Add Reading Session
+                </CardTitle>
+                <span className="text-[10px] font-mono font-bold bg-amber-100 border border-stone-800 px-1.5 py-0.5 rounded">
+                  NEW LOG
+                </span>
+              </div>
+              <CardDescription className="text-xs text-stone-500">
+                Log a new reading session into your personal journal
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <form
                 data-testid="reading-log-form"
                 noValidate
@@ -211,7 +234,7 @@ export default function ReadingLogsPage() {
                 {errorReadingLog && (
                   <div
                     data-testid="error-reading-log"
-                    className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/50 dark:text-red-400 rounded-md border border-red-200 dark:border-red-800"
+                    className="p-3 text-xs font-bold text-red-700 bg-red-100 rounded-lg border-2 border-red-500 shadow-[2px_2px_0px_#ef4444]"
                   >
                     {errorReadingLog}
                   </div>
@@ -220,14 +243,15 @@ export default function ReadingLogsPage() {
                 {successMessage && (
                   <div
                     data-testid="reading-log-success"
-                    className="p-3 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-md border border-emerald-200 dark:border-emerald-800 font-medium"
+                    className="p-3 text-xs font-bold text-emerald-800 bg-emerald-100 rounded-lg border-2 border-emerald-600 shadow-[2px_2px_0px_#059669] flex items-center gap-1.5"
                   >
-                    {successMessage}
+                    <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>Reading session added</span>
                   </div>
                 )}
 
                 {/* Book Title */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor="input-book-title">Book Title</Label>
                   <Input
                     id="input-book-title"
@@ -238,14 +262,14 @@ export default function ReadingLogsPage() {
                     placeholder="e.g. Atomic Habits"
                   />
                   {errorBookTitle && (
-                    <p data-testid="error-book-title" className="text-xs text-red-600 dark:text-red-400">
+                    <p data-testid="error-book-title" className="text-xs font-bold text-red-600 pt-0.5">
                       {errorBookTitle}
                     </p>
                   )}
                 </div>
 
                 {/* Minutes Read */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor="input-minutes">Minutes Read</Label>
                   <Input
                     id="input-minutes"
@@ -257,21 +281,21 @@ export default function ReadingLogsPage() {
                     min="1"
                   />
                   {errorMinutes && (
-                    <p data-testid="error-minutes" className="text-xs text-red-600 dark:text-red-400">
+                    <p data-testid="error-minutes" className="text-xs font-bold text-red-600 pt-0.5">
                       {errorMinutes}
                     </p>
                   )}
                 </div>
 
                 {/* Genre */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor="input-genre">Genre</Label>
                   <select
                     id="input-genre"
                     data-testid="input-genre"
                     value={genre}
                     onChange={handleGenreChange}
-                    className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:focus-visible:ring-slate-300"
+                    className="flex h-10 w-full rounded-lg border-2 border-stone-800 bg-white px-3 py-1.5 text-sm font-medium text-stone-900 shadow-[2px_2px_0px_#292524] transition-all focus-visible:outline-none focus-visible:bg-amber-50/60 focus-visible:shadow-[3px_3px_0px_#292524]"
                   >
                     <option value="">Choose genre</option>
                     <option value="Fiction">Fiction</option>
@@ -281,14 +305,14 @@ export default function ReadingLogsPage() {
                     <option value="Other">Other</option>
                   </select>
                   {errorGenre && (
-                    <p data-testid="error-genre" className="text-xs text-red-600 dark:text-red-400">
+                    <p data-testid="error-genre" className="text-xs font-bold text-red-600 pt-0.5">
                       {errorGenre}
                     </p>
                   )}
                 </div>
 
                 {/* Optional Note */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor="input-note">Note (optional)</Label>
                   <Input
                     id="input-note"
@@ -301,7 +325,7 @@ export default function ReadingLogsPage() {
                 </div>
 
                 {/* Date */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <Label htmlFor="input-date">Date</Label>
                   <Input
                     id="input-date"
@@ -311,7 +335,7 @@ export default function ReadingLogsPage() {
                     onChange={handleDateChange}
                   />
                   {errorDate && (
-                    <p data-testid="error-date" className="text-xs text-red-600 dark:text-red-400">
+                    <p data-testid="error-date" className="text-xs font-bold text-red-600 pt-0.5">
                       {errorDate}
                     </p>
                   )}
@@ -320,7 +344,7 @@ export default function ReadingLogsPage() {
                 <Button
                   type="submit"
                   data-testid="btn-add-reading-log"
-                  className="w-full mt-2"
+                  className="w-full mt-2 h-11 text-base shadow-[3px_3px_0px_#292524]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Adding Session..." : "Add Reading Session"}
@@ -330,59 +354,72 @@ export default function ReadingLogsPage() {
           </Card>
 
           {/* Reading Summary Card */}
-          <Card className="shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xl">Reading Summary</CardTitle>
-              <CardDescription>Live stats of the currently filtered sessions</CardDescription>
+          <Card className="shadow-[5px_5px_0px_#292524] border-3 border-stone-800 bg-[#fffdfa]">
+            <CardHeader className="pb-3 border-b-2 border-stone-200">
+              <CardTitle className="text-lg font-black pixel-font flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-700" />
+                Reading Summary
+              </CardTitle>
+              <CardDescription className="text-xs text-stone-500">
+                Live stats of the currently filtered sessions
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-4 space-y-4">
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Sessions</div>
-                  <div data-testid="reading-log-count" className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                <div className="p-2.5 bg-amber-100 rounded-lg border-2 border-stone-800 shadow-[2px_2px_0px_#292524]">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900">
+                    Sessions
+                  </div>
+                  <div data-testid="reading-log-count" className="text-2xl font-black text-stone-900 mt-1 pixel-font">
                     {summary.count}
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-100 dark:border-amber-900/50">
-                  <div className="text-xs text-amber-700 dark:text-amber-400 font-medium">Favorites</div>
-                  <div data-testid="favorite-count" className="text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1">
+                <div className="p-2.5 bg-rose-100 rounded-lg border-2 border-stone-800 shadow-[2px_2px_0px_#292524]">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-900">
+                    Favorites
+                  </div>
+                  <div data-testid="favorite-count" className="text-2xl font-black text-rose-900 mt-1 pixel-font">
                     {summary.favoriteCount}
                   </div>
                 </div>
 
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
-                  <div className="text-xs text-indigo-700 dark:text-indigo-400 font-medium">Total Minutes</div>
-                  <div data-testid="total-minutes" className="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mt-1">
+                <div className="p-2.5 bg-emerald-100 rounded-lg border-2 border-stone-800 shadow-[2px_2px_0px_#292524]">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-900">
+                    Minutes
+                  </div>
+                  <div data-testid="total-minutes" className="text-2xl font-black text-emerald-900 mt-1 pixel-font">
                     {summary.totalMinutes}
                   </div>
                 </div>
               </div>
 
               {/* Genre Breakdown */}
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="space-y-2 pt-2 border-t-2 border-stone-200">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
                   Genre Breakdown
                 </h4>
                 <div data-testid="genre-breakdown" className="space-y-2">
                   {summary.breakdown.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic py-1">No genre data for current filter.</p>
+                    <p className="text-xs text-stone-400 italic py-1 font-mono">
+                      No genre data for current filter.
+                    </p>
                   ) : (
                     summary.breakdown.map((row) => (
                       <div
                         key={row.genre}
                         data-testid="breakdown-row"
-                        className="flex items-center justify-between text-sm py-1.5 px-3 bg-slate-50 dark:bg-slate-900 rounded-md"
+                        className="flex items-center justify-between text-xs py-2 px-3 bg-white rounded-lg border-2 border-stone-800 shadow-[1.5px_1.5px_0px_#292524]"
                       >
-                        <span data-testid="breakdown-name" className="font-medium text-slate-800 dark:text-slate-200">
+                        <span data-testid="breakdown-name" className="font-bold text-stone-900">
                           {row.genre}
                         </span>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                          <span className="text-stone-500 font-mono">
                             <span data-testid="breakdown-count">{row.count}</span> {row.count === 1 ? "session" : "sessions"}
                           </span>
-                          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                            <span data-testid="breakdown-total">{row.total}</span> mins
+                          <span className="font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-stone-800 font-mono">
+                            <span data-testid="breakdown-total">{row.total}</span>m
                           </span>
                         </div>
                       </div>
@@ -397,19 +434,19 @@ export default function ReadingLogsPage() {
         {/* Right Column: Filters and Sessions List */}
         <div className="lg:col-span-7 space-y-6">
           {/* Filter Controls Card */}
-          <Card className="shadow-sm">
+          <Card className="shadow-[4px_4px_0px_#292524] border-2 border-stone-800 bg-[#fffdfa]">
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                 {/* Search Input */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                   <Input
                     type="text"
                     data-testid="search-input"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by book title or note..."
-                    className="pl-8"
+                    className="pl-9"
                   />
                 </div>
 
@@ -419,7 +456,7 @@ export default function ReadingLogsPage() {
                     data-testid="filter-genre"
                     value={genreFilter}
                     onChange={(e) => setGenreFilter(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:focus-visible:ring-slate-300"
+                    className="flex h-10 w-full rounded-lg border-2 border-stone-800 bg-white px-3 py-1.5 text-sm font-medium text-stone-900 shadow-[2px_2px_0px_#292524] transition-all focus-visible:outline-none focus-visible:bg-amber-50/60 focus-visible:shadow-[3px_3px_0px_#292524]"
                   >
                     <option value="">All Genres</option>
                     <option value="Fiction">Fiction</option>
@@ -433,13 +470,13 @@ export default function ReadingLogsPage() {
 
               <div className="flex items-center justify-between pt-1">
                 {/* Favorite Checkbox */}
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-stone-800 select-none">
                   <input
                     type="checkbox"
                     data-testid="filter-favorite"
                     checked={favoriteFilter}
                     onChange={(e) => setFavoriteFilter(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-2 border-stone-800 text-amber-600 focus:ring-0 cursor-pointer accent-amber-600"
                   />
                   <span>Favorites only</span>
                 </label>
@@ -450,7 +487,7 @@ export default function ReadingLogsPage() {
                   size="sm"
                   data-testid="btn-clear-filters"
                   onClick={clearFilters}
-                  className="gap-1 text-xs"
+                  className="gap-1 text-xs h-8 shadow-[2px_2px_0px_#292524]"
                 >
                   <X className="h-3.5 w-3.5" />
                   Clear
@@ -463,86 +500,96 @@ export default function ReadingLogsPage() {
           {logs.length === 0 ? (
             <div
               data-testid="reading-logs-empty"
-              className="flex flex-col items-center justify-center p-12 text-center bg-white dark:bg-slate-950 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-slate-500"
+              className="flex flex-col items-center justify-center p-12 text-center bg-[#fffdfa] rounded-xl border-3 border-dashed border-stone-400 text-stone-500 shadow-[3px_3px_0px_#292524]"
             >
-              <BookOpen className="h-10 w-10 text-slate-400 mb-3" />
-              <p className="text-base font-medium text-slate-700 dark:text-slate-300">
+              <div className="h-12 w-12 rounded-xl bg-amber-100 border-2 border-stone-800 shadow-[2px_2px_0px_#292524] flex items-center justify-center text-amber-800 mb-3">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <p className="text-base font-bold text-stone-800 pixel-font">
                 No reading sessions found
               </p>
-              <p className="text-xs text-slate-400 mt-1 max-w-sm">
+              <p className="text-xs text-stone-500 mt-1 max-w-sm font-medium">
                 Add a new session using the form or reset the active search filters to view your logs.
               </p>
             </div>
           ) : (
-            <div data-testid="reading-log-list" className="space-y-3">
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  data-testid="reading-log-item"
-                  className="p-4 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow transition-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3
-                        data-testid="reading-log-title"
-                        className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate"
-                      >
-                        {log.bookTitle}
-                      </h3>
-                      <span
-                        data-testid="reading-log-genre"
-                        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium"
-                      >
-                        <Tag className="h-3 w-3" />
-                        {log.genre}
-                      </span>
+            <div data-testid="reading-log-list" className="space-y-3.5">
+              {logs.map((log) => {
+                const badgeColor = GENRE_BADGE_COLORS[log.genre] || "bg-stone-100 text-stone-800 border-stone-800";
+                return (
+                  <div
+                    key={log.id}
+                    data-testid="reading-log-item"
+                    className="p-4 bg-white rounded-xl border-2 border-stone-800 shadow-[3.5px_3.5px_0px_#292524] hover:shadow-[5px_5px_0px_#292524] hover:translate-y-[-1px] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-2 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3
+                          data-testid="reading-log-title"
+                          className="text-base font-bold text-stone-900 truncate"
+                        >
+                          {log.bookTitle}
+                        </h3>
+                        <span
+                          data-testid="reading-log-genre"
+                          className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-mono font-bold ${badgeColor}`}
+                        >
+                          {log.genre}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs font-mono font-medium text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-stone-500" />
+                          <span data-testid="reading-log-minutes" className="font-bold text-stone-900">
+                            {log.minutesRead}
+                          </span>{" "}
+                          mins
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-stone-500" />
+                          <span data-testid="reading-log-date">{log.readOn}</span>
+                        </span>
+                      </div>
+
+                      {log.note && (
+                        <p className="text-xs text-stone-700 bg-amber-50/70 border border-stone-300 p-2 rounded-lg font-medium">
+                          &quot;{log.note}&quot;
+                        </p>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span data-testid="reading-log-minutes">{log.minutesRead}</span> mins
-                      </span>
-                      <span>•</span>
-                      <span data-testid="reading-log-date">{log.readOn}</span>
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      <button
+                        type="button"
+                        data-testid="btn-toggle-favorite"
+                        aria-pressed={log.favorite ? "true" : "false"}
+                        onClick={() => toggleFavorite(log.id, log.favorite)}
+                        className={`p-2 rounded-lg border-2 border-stone-800 transition-all cursor-pointer shadow-[2px_2px_0px_#292524] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
+                          log.favorite
+                            ? "bg-amber-300 text-amber-950 hover:bg-amber-400"
+                            : "bg-white text-stone-400 hover:text-stone-700 hover:bg-stone-50"
+                        }`}
+                        title={log.favorite ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Star className={`h-4 w-4 ${log.favorite ? "fill-amber-500 text-amber-900" : ""}`} />
+                      </button>
+
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        data-testid="btn-delete-reading-log"
+                        onClick={() => deleteSession(log.id)}
+                        className="h-8 w-8 text-white shadow-[2px_2px_0px_#292524]"
+                        title="Delete session"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    {log.note && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-900 p-2 rounded">
-                        &quot;{log.note}&quot;
-                      </p>
-                    )}
                   </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    <button
-                      type="button"
-                      data-testid="btn-toggle-favorite"
-                      aria-pressed={log.favorite ? "true" : "false"}
-                      onClick={() => toggleFavorite(log.id, log.favorite)}
-                      className={`p-2 rounded-lg border transition-colors ${
-                        log.favorite
-                          ? "bg-amber-50 border-amber-200 text-amber-500 hover:bg-amber-100 dark:bg-amber-950/40 dark:border-amber-900/50"
-                          : "border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                      }`}
-                      title={log.favorite ? "Remove from favorites" : "Add to favorites"}
-                    >
-                      <Star className={`h-4 w-4 ${log.favorite ? "fill-amber-500 text-amber-500" : ""}`} />
-                    </button>
-
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      data-testid="btn-delete-reading-log"
-                      onClick={() => deleteSession(log.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 border-slate-200 dark:border-slate-800"
-                      title="Delete session"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -550,4 +597,3 @@ export default function ReadingLogsPage() {
     </div>
   );
 }
-

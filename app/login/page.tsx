@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { BookOpen } from "lucide-react";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -93,10 +94,17 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-12">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold tracking-tight">Sign in</CardTitle>
-          <CardDescription>Enter your email and password to access your reading logs</CardDescription>
+      <Card className="w-full max-w-md shadow-[6px_6px_0px_#292524] border-3 border-stone-800 bg-[#fffdfa]">
+        <CardHeader className="space-y-2 text-center pb-4">
+          <div className="mx-auto h-12 w-12 rounded-xl bg-amber-400 border-2 border-stone-800 shadow-[3px_3px_0px_#292524] flex items-center justify-center text-stone-900 mb-1">
+            <BookOpen className="h-6 w-6" />
+          </div>
+          <CardTitle className="text-2xl font-black pixel-font text-stone-900">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-stone-600 font-medium text-xs">
+            Open your reading journal and continue your streak
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -108,13 +116,13 @@ export default function LoginPage() {
             {authError && (
               <div
                 data-testid="error-auth"
-                className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/50 dark:text-red-400 rounded-md border border-red-200 dark:border-red-800"
+                className="p-3 text-xs font-bold text-red-700 bg-red-100 rounded-lg border-2 border-red-500 shadow-[2px_2px_0px_#ef4444]"
               >
                 {authError}
               </div>
             )}
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -126,13 +134,13 @@ export default function LoginPage() {
                 autoComplete="email"
               />
               {emailError && (
-                <p data-testid="error-email" className="text-xs text-red-600 dark:text-red-400">
+                <p data-testid="error-email" className="text-xs font-bold text-red-600 pt-0.5">
                   {emailError}
                 </p>
               )}
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -144,7 +152,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
               {passwordError && (
-                <p data-testid="error-password" className="text-xs text-red-600 dark:text-red-400">
+                <p data-testid="error-password" className="text-xs font-bold text-red-600 pt-0.5">
                   {passwordError}
                 </p>
               )}
@@ -153,17 +161,17 @@ export default function LoginPage() {
             <Button
               type="submit"
               data-testid="login-submit"
-              className="w-full mt-2"
+              className="w-full mt-2 h-11 text-base shadow-[3px_3px_0px_#292524]"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+        <CardFooter className="flex justify-center border-t-2 border-stone-200 pt-4">
+          <p className="text-xs font-bold text-stone-600">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+            <Link href="/register" className="text-amber-700 hover:text-amber-900 underline decoration-2 underline-offset-2">
               Register
             </Link>
           </p>
@@ -172,4 +180,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
